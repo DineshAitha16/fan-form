@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fan Message Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🌍 Submit Your Fan Message</h2>
+  <form id="fanForm">
+    <input type="text" id="message" placeholder="Type your message here..." required />
+    <button type="submit">Submit</button>
+  </form>
+  <p id="status">Status: Waiting for input...</p>
+
+  <script>
+    const form = document.getElementById("fanForm");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      status.innerText = "📍 Getting your location...";
+
+      if (!navigator.geolocation) {
+        status.innerText = "❌ Geolocation not supported by your browser.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const msg = document.getElementById("message").value;
+
+        let location = "Unknown";
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+          const data = await res.json();
+          const city = data.address.city || data.address.town || data.address.village || "Unknown";
+          const country = data.address.country || "Unknown";
+          location = `${city}, ${country}`;
+        } catch (e) {
+          location = "Unknown";
+        }
+
+        status.innerText = "📤 Submitting your message...";
+
+        // Replace with your own working Google Apps Script URL:
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxHKyXZy4yaiZWnslTUbXKVR2eM2LdbpGwksEinjQqUODFsNERCVaMjR7g87ZDOvn5PIw/exec";
+
+        try {
+          const response = await fetch(scriptURL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: msg,
+              lat: lat,
+              lng: lng,
+              location: location,
+            }),
+          });
+
+          if (response.ok) {
+            status.innerText = "✅ Message submitted successfully!";
+            form.reset();
+          } else {
+            status.innerText = "❌ Submission failed. Please try again.";
+          }
+        } catch (error) {
+          status.innerText = "❌ Error connecting to server.";
+          console.error(error);
+        }
+
+      }, () => {
+        status.innerText = "❌ Location access denied.";
+      });
+    });
+  </script>
+</body>
+</html>
