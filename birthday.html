@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Happy Birthday Mahesh Anna!</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.1.2/wordcloud2.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #111;
+      color: #00eaff;
+      text-align: center;
+    }
+    #cloudCanvas {
+      width: 100vw;
+      height: 90vh;
+    }
+    h1 {
+      margin: 10px 0;
+      font-size: 28px;
+      color: #0ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Happy Birthday Mahesh Anna! ✨</h1>
+  <canvas id="cloudCanvas"></canvas>
+
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:json';
+
+    async function fetchMessages() {
+      const res = await fetch(sheetURL);
+      const text = await res.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      const rows = json.table.rows;
+
+      const words = rows.map(row => row.c[0]?.v || "Mahesh Babu").filter(Boolean);
+
+      WordCloud(document.getElementById('cloudCanvas'), {
+        list: words.map(w => [w, Math.floor(Math.random() * 50) + 20]),
+        gridSize: 10,
+        weightFactor: 2,
+        fontFamily: 'Arial',
+        color: () => '#00eaff',
+        backgroundColor: '#111',
+        rotateRatio: 0,
+        shape: 'heart',
+        drawOutOfBound: false,
+      });
+    }
+
+    fetchMessages();
+  </script>
+</body>
+</html>
