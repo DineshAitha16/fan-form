@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Fan Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script>
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:csv";
+    
+    async function fetchFanData() {
+      const res = await fetch(sheetURL);
+      const csv = await res.text();
+      const rows = csv.trim().split("\n").slice(1); // Skip header
+      return rows.map(row => {
+        const [message, lat, lng, location] = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/(^"|"$)/g, ""));
+        return { message, lat: parseFloat(lat), lng: parseFloat(lng), location };
+      });
+    }
+
+    async function initMap() {
+      const map = L.map("map").setView([20.5937, 78.9629], 4); // Centered on India
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+
+      const fanData = await fetchFanData();
+      const markers = L.markerClusterGroup();
+
+      fanData.forEach(({ message, lat, lng, location }) => {
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const marker = L.marker([lat, lng]);
+          marker.bindPopup(`<b>${message}</b><br>${location}`);
+          markers.addLayer(marker);
+        }
+      });
+
+      map.addLayer(markers);
+    }
+
+    initMap();
+  </script>
+</body>
+</html>
