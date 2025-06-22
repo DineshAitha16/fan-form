@@ -57,6 +57,7 @@
 
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:json';
+    const MAX_MESSAGES = 2000; // Performance-optimized message limit
 
     async function fetchMessages() {
       const res = await fetch(sheetURL);
@@ -67,14 +68,17 @@
       const container = document.getElementById("messagesContainer");
       container.innerHTML = "";
 
-      rows.forEach(row => {
+      let count = 0;
+      for (let row of rows) {
+        if (count >= MAX_MESSAGES) break;
         const msg = row.c[0]?.v;
         if (msg) {
           const span = document.createElement("span");
           span.textContent = msg;
           container.appendChild(span);
+          count++;
         }
-      });
+      }
     }
 
     fetchMessages();
