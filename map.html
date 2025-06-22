@@ -22,50 +22,47 @@
   <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
   <script>
     const map = L.map('map').setView([20.5937, 78.9629], 4); // Centered on India
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-
     const markerCluster = L.markerClusterGroup();
     map.addLayer(markerCluster);
 
-    // Load CSV from Google Sheets as JSON (via Apps Script or public CSV export)
     const sheetURL = 'https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:json';
 
     async function loadData() {
-      const res = await fetch(sheetURL);
-      const text = await res.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2)); // Remove weird prefix/suffix
+      try {
+        const res = await fetch(sheetURL);
+        const text = await res.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+        const rows = json.table.rows;
 
-      const rows = json.table.rows;
-      const fanData = [];
+        let validCount = 0;
 
-      rows.forEach(row => {
-        try {
+        rows.forEach(row => {
           const message = row.c[0]?.v || "";
           const lat = parseFloat(row.c[1]?.v);
           const lng = parseFloat(row.c[2]?.v);
-          const location = row.c[3]?.v || "";
+          const location = row.c[3]?.v || "Unknown";
 
           if (!isNaN(lat) && !isNaN(lng)) {
-            fanData.push({ message, lat, lng, location });
             const marker = L.marker([lat, lng]);
-            marker.bindPopup(`<b>${location}</b><br>${message}`);
+            marker.bindPopup(`<b>${message}</b><br>${location}`);
             markerCluster.addLayer(marker);
+            validCount++;
           }
-        } catch (e) {
-          // skip bad rows
-        }
-      });
+        });
 
-      // ✅ Show fan count
-      document.getElementById("fanCount").innerText = `🌍 Total Fans: ${fanData.length}`;
+        document.getElementById("fanCount").innerText = `🌍 Total Fans: ${validCount}`;
+      } catch (err) {
+        console.error("Error loading map data:", err);
+        document.getElementById("fanCount").innerText = "⚠️ Failed to load map data.";
+      }
     }
 
     loadData();
 
-    // ✅ Auto-refresh map every 60 seconds
+    // 🔁 Auto-refresh every 60 seconds
     setInterval(() => location.reload(), 60000);
   </script>
 </body>
