@@ -4,13 +4,24 @@
   <title>Fan Radar Map</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet + MarkerCluster CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+
   <style>
-    body { margin: 0; font-family: sans-serif; }
-    #map { height: 90vh; }
-    h2 { text-align: center; margin: 10px 0; }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+    #map {
+      height: 90vh;
+    }
+    h2 {
+      text-align: center;
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
@@ -18,13 +29,17 @@
   <h2 id="fanCount">🌍 Total Fans: Loading...</h2>
   <div id="map"></div>
 
+  <!-- Leaflet + MarkerCluster JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
   <script>
     const map = L.map('map').setView([20.5937, 78.9629], 4); // Centered on India
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+
     const markerCluster = L.markerClusterGroup();
     map.addLayer(markerCluster);
 
@@ -38,6 +53,7 @@
         const rows = json.table.rows;
 
         let validCount = 0;
+        const seenCoords = new Set();
 
         rows.forEach(row => {
           const message = row.c[0]?.v || "";
@@ -46,10 +62,14 @@
           const location = row.c[3]?.v || "Unknown";
 
           if (!isNaN(lat) && !isNaN(lng)) {
-            const marker = L.marker([lat, lng]);
-            marker.bindPopup(`<b>${message}</b><br>${location}`);
-            markerCluster.addLayer(marker);
-            validCount++;
+            const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+            if (!seenCoords.has(key)) {
+              seenCoords.add(key);
+              const marker = L.marker([lat, lng]);
+              marker.bindPopup(`<b>${message}</b><br>${location}`);
+              markerCluster.addLayer(marker);
+              validCount++;
+            }
           }
         });
 
