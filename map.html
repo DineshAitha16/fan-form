@@ -66,7 +66,11 @@
             if (!seenCoords.has(key)) {
               seenCoords.add(key);
               const marker = L.marker([lat, lng]);
-              marker.bindPopup(`<b>${message}</b><br>${location}`);
+              marker.bindPopup(`
+                <b>📩 ${message}</b><br>
+                🌍 ${location}<br>
+                📍 Lat: ${lat.toFixed(7)}, Lng: ${lng.toFixed(7)}
+              `);
               markerCluster.addLayer(marker);
               validCount++;
             }
