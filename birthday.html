@@ -3,30 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <title>Fan Messages in HAPPY!</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.1.2/wordcloud2.min.js"></script>
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
       font-family: 'Arial', sans-serif;
-      background-color: #111;
-      color: #00eaff;
+      background: #000;
+      color: white;
       text-align: center;
     }
-    #cloudCanvas {
+    .container {
+      position: relative;
       width: 100vw;
-      height: 90vh;
+      height: 100vh;
+      background: black;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    h1 {
-      margin: 10px 0;
-      font-size: 28px;
-      color: #0ff;
+    .letters {
+      font-size: 20vw;
+      font-weight: bold;
+      color: #222;
+      position: absolute;
+      z-index: 1;
+      letter-spacing: 2vw;
+    }
+    .messages {
+      position: absolute;
+      width: 90vw;
+      height: 90vh;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2vw;
+      color: #00eaff;
+    }
+    .messages span {
+      margin: 0.5vw;
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
-  <h1>✨ Messages inside H A P P Y for Mahesh Anna ✨</h1>
-  <canvas id="cloudCanvas"></canvas>
+  <h2 style="margin-top: 10px; color: #0ff">🎉 Happy Birthday Mahesh Anna 🎉</h2>
+  <div class="container">
+    <div class="letters">HAPPY</div>
+    <div class="messages" id="messagesContainer"></div>
+  </div>
 
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:json';
@@ -37,25 +64,17 @@
       const json = JSON.parse(text.substr(47).slice(0, -2));
       const rows = json.table.rows;
 
-      const words = rows.map(row => row.c[0]?.v || "Mahesh Babu").filter(Boolean);
+      const container = document.getElementById("messagesContainer");
+      container.innerHTML = "";
 
-      WordCloud(document.getElementById('cloudCanvas'), {
-        list: words.map(w => [w, Math.floor(Math.random() * 50) + 20]),
-        gridSize: 10,
-        weightFactor: 2,
-        fontFamily: 'Arial',
-        color: () => '#00eaff',
-        backgroundColor: '#111',
-        rotateRatio: 0,
-        shape: drawHAPPY,
-        drawOutOfBound: false,
+      rows.forEach(row => {
+        const msg = row.c[0]?.v;
+        if (msg) {
+          const span = document.createElement("span");
+          span.textContent = msg;
+          container.appendChild(span);
+        }
       });
-    }
-
-    function drawHAPPY(theta) {
-      const x = Math.cos(theta);
-      const y = Math.sin(theta);
-      return (x * x + y * y < 1) && (x * x - y * y < 1); // crude 'HAPPY' shaped function
     }
 
     fetchMessages();
