@@ -1,73 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Fan Radar Map</title>
   <meta charset="utf-8" />
-  <title>Fan Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
+    body { margin: 0; font-family: sans-serif; }
+    #map { height: 90vh; }
+    h2 { text-align: center; margin: 10px 0; }
   </style>
 </head>
 <body>
+
+  <h2 id="fanCount">🌍 Total Fans: Loading...</h2>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:csv";
-    
-    async function fetchFanData() {
+    const map = L.map('map').setView([20.5937, 78.9629], 4); // Centered on India
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markerCluster = L.markerClusterGroup();
+    map.addLayer(markerCluster);
+
+    // Load CSV from Google Sheets as JSON (via Apps Script or public CSV export)
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/1AOZNGkoZPOqOF31E8JlBde0Opd1c4nl2gE_oadfD2c0/gviz/tq?tqx=out:json';
+
+    async function loadData() {
       const res = await fetch(sheetURL);
-      const csv = await res.text();
-      const rows = csv.trim().split("\n").slice(1); // Skip header
-      return rows.map(row => {
-        const [message, lat, lng, location] = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/(^"|"$)/g, ""));
-        return { message, lat: parseFloat(lat), lng: parseFloat(lng), location };
-      });
-    }
+      const text = await res.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2)); // Remove weird prefix/suffix
 
-    async function initMap() {
-      const map = L.map("map").setView([20.5937, 78.9629], 4); // Centered on India
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(map);
+      const rows = json.table.rows;
+      const fanData = [];
 
-      const fanData = await fetchFanData();
-      const markers = L.markerClusterGroup();
+      rows.forEach(row => {
+        try {
+          const message = row.c[0]?.v || "";
+          const lat = parseFloat(row.c[1]?.v);
+          const lng = parseFloat(row.c[2]?.v);
+          const location = row.c[3]?.v || "";
 
-      fanData.forEach(({ message, lat, lng, location }) => {
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const marker = L.marker([lat, lng]);
-          marker.bindPopup(`<b>${message}</b><br>${location}`);
-          markers.addLayer(marker);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            fanData.push({ message, lat, lng, location });
+            const marker = L.marker([lat, lng]);
+            marker.bindPopup(`<b>${location}</b><br>${message}`);
+            markerCluster.addLayer(marker);
+          }
+        } catch (e) {
+          // skip bad rows
         }
       });
 
-      map.addLayer(markers);
+      // ✅ Show fan count
+      document.getElementById("fanCount").innerText = `🌍 Total Fans: ${fanData.length}`;
     }
 
-    initMap();
+    loadData();
+
+    // ✅ Auto-refresh map every 60 seconds
+    setInterval(() => location.reload(), 60000);
   </script>
 </body>
 </html>
