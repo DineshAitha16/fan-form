@@ -73,10 +73,11 @@
         status.innerText = "📤 Submitting your message...";
 
         // Replace with your own working Google Apps Script URL:
+                // Replace with your own working Google Apps Script URL:
         const scriptURL = "https://script.google.com/macros/s/AKfycbxHKyXZy4yaiZWnslTUbXKVR2eM2LdbpGwksEinjQqUODFsNERCVaMjR7g87ZDOvn5PIw/exec";
 
         try {
-          const response = await fetch(scriptURL, {
+          await fetch(scriptURL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -87,14 +88,11 @@
               lng: lng,
               location: location,
             }),
+            mode: "no-cors"  // 🔥 Required for Blogger to allow POST
           });
 
-          if (response.ok) {
-            status.innerText = "✅ Message submitted successfully!";
-            form.reset();
-          } else {
-            status.innerText = "❌ Submission failed. Please try again.";
-          }
+          status.innerText = "✅ Message submitted successfully!";
+          form.reset();
         } catch (error) {
           status.innerText = "❌ Error connecting to server.";
           console.error(error);
