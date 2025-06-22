@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Happy Birthday Mahesh Anna!</title>
+  <title>Fan Messages in HAPPY!</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.1.2/wordcloud2.min.js"></script>
   <style>
     html, body {
@@ -25,7 +25,7 @@
   </style>
 </head>
 <body>
-  <h1>✨ Happy Birthday Mahesh Anna! ✨</h1>
+  <h1>✨ Messages inside H A P P Y for Mahesh Anna ✨</h1>
   <canvas id="cloudCanvas"></canvas>
 
   <script>
@@ -47,9 +47,15 @@
         color: () => '#00eaff',
         backgroundColor: '#111',
         rotateRatio: 0,
-        shape: 'heart',
+        shape: drawHAPPY,
         drawOutOfBound: false,
       });
+    }
+
+    function drawHAPPY(theta) {
+      const x = Math.cos(theta);
+      const y = Math.sin(theta);
+      return (x * x + y * y < 1) && (x * x - y * y < 1); // crude 'HAPPY' shaped function
     }
 
     fetchMessages();
